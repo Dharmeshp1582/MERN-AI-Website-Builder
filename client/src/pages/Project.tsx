@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Project } from '../types';
 import { ArrowBigDownDashIcon, EyeIcon, EyeOffIcon, FullscreenIcon, LaptopIcon, Loader2Icon, MessagesSquareIcon, SaveIcon, SmartphoneIcon, TabletIcon, XIcon } from 'lucide-react';
 import { dummyConversations, dummyProjects, dummyVersion } from '../assets/assets';
 import favicon from "../assets/favicon.svg";
 import Sidebar from '../components/Sidebar';
+import ProjectPreview, { type ProjectPreviewRef } from '../components/ProjectPreview';
 
 const Project = () => {
 
@@ -20,6 +21,8 @@ const Project = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const previewRef = useRef<ProjectPreviewRef>(null);
+
   const fetchProject = async () => {
     const project = dummyProjects.find((project) => project.id === projectId);
     setTimeout(() => {
@@ -33,8 +36,22 @@ const Project = () => {
 
   const saveProject = async () => {}
 
-  const downloadCode = async () => {
 
+  // download code (index.html)
+  const downloadCode = async () => {
+     const code = previewRef.current?.getCode() || project?.current_code;
+     if(!code){
+       if(isGenerating){
+        return
+       }
+       return
+     }
+     const element = document.createElement('a');
+     const file = new Blob([code],{type: "text/html"});
+     element.href = URL.createObjectURL(file);
+     element.download = "index.html";
+     document.body.appendChild(element);
+     element.click(); 
   }
 
   const togglePublish = async() => {}
@@ -112,7 +129,7 @@ const Project = () => {
       <Sidebar isMenuOpen={isMenuOpen} project={project} setProject={(p)=>setProject(p)} isGenerating={isGenerating} setIsGenerating={setIsGenerating} />
 
       <div className='flex-1 p-2 pl-0'>
-        Project Preview
+        <ProjectPreview project={project} isGenerating={isGenerating} device={device} showEditorPanel={!isMenuOpen} ref={previewRef} />
       </div>
     </div>
 
